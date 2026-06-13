@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -71,3 +72,7 @@ export default defineConfig([
   },
 ])
 ```
+=======
+# react-editor
+Editor with dark mode, preview mode, word count and much more.
+>>>>>>> 40826c896433fc868661cc181a199f47f5b4a23f
