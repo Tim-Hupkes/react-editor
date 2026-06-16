@@ -29,6 +29,7 @@ export function MarkdownToolbar({ onFormat }: MarkdownToolbarProps) {
           className="markdown-toolbar__button"
           title={action.title}
           aria-label={action.title}
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => onFormat(action.format)}
         >
           {action.label}

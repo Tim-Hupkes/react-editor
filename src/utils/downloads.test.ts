@@ -2,19 +2,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { downloadPdfFile, downloadTextFile } from './downloads'
 
 const mocks = vi.hoisted(() => ({
+  renderMarkdownToPdf: vi.fn(),
   save: vi.fn(),
-  splitTextToSize: vi.fn((text: string) => [`wrapped: ${text}`]),
-  text: vi.fn(),
 }))
 
 vi.mock('jspdf', () => ({
   jsPDF: vi.fn(function jsPDF() {
     return {
       save: mocks.save,
-      splitTextToSize: mocks.splitTextToSize,
-      text: mocks.text,
     }
   }),
+}))
+
+vi.mock('./markdownPdf', () => ({
+  renderMarkdownToPdf: mocks.renderMarkdownToPdf,
 }))
 
 describe('downloads', () => {
@@ -59,8 +60,7 @@ describe('downloads', () => {
   it('downloads a PDF using jsPDF', async () => {
     await downloadPdfFile('PDF text', 'Report')
 
-    expect(mocks.splitTextToSize).toHaveBeenCalledWith('PDF text', 180)
-    expect(mocks.text).toHaveBeenCalledWith(['wrapped: PDF text'], 10, 10)
+    expect(mocks.renderMarkdownToPdf).toHaveBeenCalledWith(expect.any(Object), 'PDF text')
     expect(mocks.save.mock.calls[0][0]).toMatch(/^report-\d{4}-\d{2}-\d{2}\.pdf$/)
   })
 })

@@ -1,14 +1,15 @@
-import { useRef } from 'react'
+import { type KeyboardEvent, useRef } from 'react'
 import { formatMarkdownSelection, type MarkdownFormat } from '../utils/markdownFormatting'
 import { MarkdownToolbar } from './MarkdownToolbar'
 
 type EditorPanelProps = {
   fontSize: number
   text: string
+  onSave: () => void
   onTextChange: (text: string) => void
 }
 
-export function EditorPanel({ fontSize, text, onTextChange }: EditorPanelProps) {
+export function EditorPanel({ fontSize, onSave, text, onTextChange }: EditorPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const applyMarkdownFormat = (format: MarkdownFormat) => {
@@ -33,6 +34,27 @@ export function EditorPanel({ fontSize, text, onTextChange }: EditorPanelProps) 
     })
   }
 
+  const handleEditorKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    const isShortcut = event.ctrlKey || event.metaKey
+
+    if (!isShortcut) {
+      return
+    }
+
+    const key = event.key.toLowerCase()
+
+    if (key === 's') {
+      event.preventDefault()
+      event.stopPropagation()
+      onSave()
+      return
+    }
+
+    if (key === 'z' || key === 'y' || key === 'a') {
+      event.stopPropagation()
+    }
+  }
+
   return (
     <section className="panel" aria-label="Text editor">
       <div className="panel__header">
@@ -49,6 +71,7 @@ export function EditorPanel({ fontSize, text, onTextChange }: EditorPanelProps) 
         className="editor-textarea"
         value={text}
         aria-describedby="editor-help"
+        onKeyDown={handleEditorKeyDown}
         onChange={(event) => onTextChange(event.target.value)}
         style={{ fontSize }}
       />

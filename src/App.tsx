@@ -109,7 +109,7 @@ function App() {
         />
 
         <div className={showPreview ? 'editor-layout' : 'editor-layout editor-layout--single'}>
-          <EditorPanel fontSize={fontSize} text={text} onTextChange={setText} />
+          <EditorPanel fontSize={fontSize} text={text} onSave={saveText} onTextChange={setText} />
           {showPreview && <PreviewPanel darkMode={darkMode} fontSize={fontSize} text={text} />}
         </div>
 

@@ -33,9 +33,9 @@ export function downloadTextFile(text: string, fileName: string) {
 
 export async function downloadPdfFile(text: string, fileName: string) {
   const { jsPDF } = await import('jspdf')
+  const { renderMarkdownToPdf } = await import('./markdownPdf')
   const doc = new jsPDF()
-  const lines = doc.splitTextToSize(text || ' ', 180)
 
-  doc.text(lines, 10, 10)
+  renderMarkdownToPdf(doc, text || ' ')
   doc.save(getDownloadName(fileName, 'pdf'))
 }
