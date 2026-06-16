@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
-import TimPhoto from './assets/Foto-Tim-editorPhoto.png'
+import TimPhoto from './assets/tim-editor-photo.webp'
 import { EditorPanel } from './components/EditorPanel'
 import { EditorStats } from './components/EditorStats'
 import { ProfileFooter } from './components/ProfileFooter'
@@ -110,7 +110,7 @@ function App() {
 
         <div className={showPreview ? 'editor-layout' : 'editor-layout editor-layout--single'}>
           <EditorPanel fontSize={fontSize} text={text} onTextChange={setText} />
-          {showPreview && <PreviewPanel fontSize={fontSize} text={text} />}
+          {showPreview && <PreviewPanel darkMode={darkMode} fontSize={fontSize} text={text} />}
         </div>
 
         <div className="action-row" aria-label="Editor actions">

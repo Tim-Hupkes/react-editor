@@ -154,6 +154,7 @@
 }
 
 .button:focus-visible,
+.markdown-toolbar__button:focus-visible,
 .field input:focus-visible,
 .editor-textarea:focus-visible,
 .profile-footer a:focus-visible {
@@ -185,6 +186,33 @@
   margin: 0;
   color: var(--heading);
   font-size: 1.35rem;
+}
+
+.markdown-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+}
+
+.markdown-toolbar__button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.markdown-toolbar__button:hover {
+  border-color: var(--primary);
 }
 
 .editor-textarea,
@@ -263,7 +291,6 @@
 .markdown-preview pre {
   overflow-x: auto;
   border-radius: 8px;
-  padding: 1rem;
   background: var(--surface-muted);
 }
 
@@ -271,6 +298,12 @@
   display: block;
   padding: 0;
   background: transparent;
+}
+
+.markdown-preview div[class*='language-'] {
+  margin: 0 !important;
+  border-radius: 8px !important;
+  font-size: 0.9em !important;
 }
 
 .action-row {

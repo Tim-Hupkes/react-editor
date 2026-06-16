@@ -6,6 +6,8 @@ A lightweight React Markdown editor with autosave, dark mode, live preview, text
 
 - Write Markdown and preview the rendered output side by side in a clean editor interface.
 - Render headings, bold text, italic text, unordered lists, links, and fenced code blocks.
+- Highlight fenced code blocks in the Markdown preview.
+- Add Markdown syntax with a small editor toolbar for common formatting actions.
 - Automatically save drafts to `localStorage`.
 - Show character count, word count, and last saved time.
 - Toggle dark mode and preview visibility.
@@ -21,6 +23,8 @@ A lightweight React Markdown editor with autosave, dark mode, live preview, text
 - Vite
 - jsPDF
 - react-markdown
+- react-syntax-highlighter
+- Vitest and Testing Library
 - ESLint
 
 ## Getting Started

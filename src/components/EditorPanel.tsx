@@ -1,3 +1,7 @@
+import { useRef } from 'react'
+import { formatMarkdownSelection, type MarkdownFormat } from '../utils/markdownFormatting'
+import { MarkdownToolbar } from './MarkdownToolbar'
+
 type EditorPanelProps = {
   fontSize: number
   text: string
@@ -5,6 +9,30 @@ type EditorPanelProps = {
 }
 
 export function EditorPanel({ fontSize, text, onTextChange }: EditorPanelProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const applyMarkdownFormat = (format: MarkdownFormat) => {
+    const textarea = textareaRef.current
+
+    if (!textarea) {
+      return
+    }
+
+    const { nextCursorEnd, nextCursorStart, nextText } = formatMarkdownSelection({
+      end: textarea.selectionEnd,
+      format,
+      start: textarea.selectionStart,
+      text,
+    })
+
+    onTextChange(nextText)
+
+    requestAnimationFrame(() => {
+      textarea.focus()
+      textarea.setSelectionRange(nextCursorStart, nextCursorEnd)
+    })
+  }
+
   return (
     <section className="panel" aria-label="Text editor">
       <div className="panel__header">
@@ -14,7 +42,9 @@ export function EditorPanel({ fontSize, text, onTextChange }: EditorPanelProps) 
           </label>
         </h2>
       </div>
+      <MarkdownToolbar onFormat={applyMarkdownFormat} />
       <textarea
+        ref={textareaRef}
         id="editor-text"
         className="editor-textarea"
         value={text}
