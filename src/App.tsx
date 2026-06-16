@@ -1,372 +1,145 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import './App.css'
 import TimPhoto from './assets/Foto-Tim-editorPhoto.png'
-import { jsPDF } from 'jspdf'
+import { EditorPanel } from './components/EditorPanel'
+import { EditorStats } from './components/EditorStats'
+import { ProfileFooter } from './components/ProfileFooter'
+import { PreviewPanel } from './components/PreviewPanel'
+import { Toolbar } from './components/Toolbar'
+import { useLocalStorageState } from './hooks/useLocalStorageState'
+import { copyTextToClipboard, downloadPdfFile, downloadTextFile } from './utils/downloads'
+import { getTextStats } from './utils/textStats'
+
+const MIN_FONT_SIZE = 12
+const MAX_FONT_SIZE = 32
+const FONT_SIZE_STEP = 2
 
 function App() {
- const [text, setText] = useState(() => {
-  const savedText = localStorage.getItem('savedText')
-  return savedText || ''})
+  const [text, setText] = useLocalStorageState('savedText', '')
+  const previousText = useRef(text)
+  const [darkMode, setDarkMode] = useState(false)
+  const [showPreview, setShowPreview] = useState(true)
+  const [fontSize, setFontSize] = useState(18)
+  const [fileName, setFileName] = useState('')
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [statusMessage, setStatusMessage] = useState('Ready to write.')
+
+  useEffect(() => {
+    if (previousText.current === text) {
+      return
+    }
+
+    previousText.current = text
+    setLastSaved(new Date())
+    setStatusMessage('Draft saved automatically.')
+  }, [text])
+
+  const textStats = getTextStats(text)
+
+  const increaseFontSize = () => {
+    setFontSize((currentFontSize) =>
+      Math.min(currentFontSize + FONT_SIZE_STEP, MAX_FONT_SIZE),
+    )
+  }
+
+  const decreaseFontSize = () => {
+    setFontSize((currentFontSize) =>
+      Math.max(currentFontSize - FONT_SIZE_STEP, MIN_FONT_SIZE),
+    )
+  }
+
+  const clearText = () => {
+    const shouldClear = window.confirm(
+      'Are you sure you want to clear the text? This cannot be undone.',
+    )
+
+    if (!shouldClear) {
+      return
+    }
+
+    setText('')
+    setStatusMessage('Text cleared.')
+  }
 
   const saveText = () => {
-  console.log('Saving text:', text)
-  localStorage.setItem('savedText', text)
-  setLastSaved(new Date().toLocaleTimeString())
-  alert('Saved')}
-  const [darkMode, setDarkMode] = useState(false)
-  const clearText = () => {
-    if (window.confirm('Are you sure you want to clear the text? This cannot be undone.')) {  
-    setText('')    }}
-  const wordCount = text.trim() 
-  === '' ? 0 : text.trim().split(/\s+/).length
-const [fontsize, setFontSize] = useState(window.innerWidth <= 768 ? 16 : 18)
-
-
-
-const [lastSaved, setLastSaved] = useState('')
-
-const [fileName, setFileName] = useState('')
-
-useEffect(() => {
-  localStorage.setItem('savedText', text)
-  setLastSaved(new Date().toLocaleTimeString())
-}, [text])
-
-const [showPreview, setShowPreview] = useState(true)
-const copyToClipboard = () => {
-  navigator.clipboard.writeText(text)
-  alert('Text copied to clipboard!')
+    localStorage.setItem('savedText', text)
+    setLastSaved(new Date())
+    setStatusMessage('Draft saved.')
   }
-const downloadTextFile = () => {
-  const today = new Date().toISOString().split('T')[0]
-  const element = document.createElement('a')
-  const file = new Blob([text], { type: 'text/plain' })
-  element.href = URL.createObjectURL(file)
-  element.download = 
-    fileName.trim() === '' ? `untitled-${today}.txt`
-     : `${fileName}-${today}.txt`
-  document.body.appendChild(element)
-  element.click()
-} 
 
-const downloadPDF = () => {
-  const doc = new jsPDF()
-  const lines = doc.splitTextToSize(text, 180)
-  doc.text(lines, 10, 10)
-  const today = new Date().toISOString().split('T')[0]
-  const pdfFileName = fileName.trim() === 
-  '' ? `untitled-${today}.pdf` : `${fileName}-${today}.pdf`
-  doc.save(pdfFileName)
-} 
+  const copyText = async () => {
+    try {
+      await copyTextToClipboard(text)
+      setStatusMessage('Text copied to clipboard.')
+    } catch {
+      setStatusMessage('Unable to copy text. Please try again.')
+    }
+  }
 
-const isMobile = window.innerWidth <= 768;
+  const exportText = () => {
+    downloadTextFile(text, fileName)
+    setStatusMessage('Text file downloaded.')
+  }
 
-const buttonStyle = {
-  fontSize: isMobile ? '14px' : '18px',
-  padding: isMobile ? '8px 16px' : '12px 28px',
-};
+  const exportPdf = async () => {
+    await downloadPdfFile(text, fileName)
+    setStatusMessage('PDF downloaded.')
+  }
 
+  return (
+    <main className={darkMode ? 'app app--dark' : 'app'}>
+      <section className="editor-shell" aria-labelledby="app-title">
+        <header className="app-header">
+          <h1 id="app-title">Tim&apos;s Editor</h1>
+          <p>Write, preview, save, and export your text from one focused workspace.</p>
+        </header>
 
+        <Toolbar
+          darkMode={darkMode}
+          fileName={fileName}
+          fontSize={fontSize}
+          maxFontSize={MAX_FONT_SIZE}
+          minFontSize={MIN_FONT_SIZE}
+          showPreview={showPreview}
+          onDecreaseFontSize={decreaseFontSize}
+          onFileNameChange={setFileName}
+          onIncreaseFontSize={increaseFontSize}
+          onToggleDarkMode={() => setDarkMode((currentMode) => !currentMode)}
+          onTogglePreview={() => setShowPreview((currentValue) => !currentValue)}
+        />
 
- return (
+        <div className={showPreview ? 'editor-layout' : 'editor-layout editor-layout--single'}>
+          <EditorPanel fontSize={fontSize} text={text} onTextChange={setText} />
+          {showPreview && <PreviewPanel fontSize={fontSize} text={text} />}
+        </div>
 
-    <div style={{
-  backgroundColor: darkMode ? '#200447' : '#f0f0f0',
-  color: darkMode ? 'white' : 'black',
-  minHeight: '100vh',
- 
-  fontFamily: 'Arial, sans-serif',
-  textAlign: 'center',
-}}>
-      <h1 style={{ fontSize: '30px', marginBottom: '0px', 
-      color: darkMode ? '#fcfcf8' : '#014d66'
+        <div className="action-row" aria-label="Editor actions">
+          <button type="button" className="button button--secondary" onClick={copyText}>
+            Copy Text
+          </button>
+          <button type="button" className="button button--secondary" onClick={saveText}>
+            Save Text
+          </button>
+          <button type="button" className="button button--danger" onClick={clearText}>
+            Clear Text
+          </button>
+          <button type="button" className="button button--secondary" onClick={exportText}>
+            Download Text
+          </button>
+          <button type="button" className="button button--secondary" onClick={exportPdf}>
+            Download PDF
+          </button>
+        </div>
 
+        <p className="status-message" role="status" aria-live="polite">
+          {statusMessage}
+        </p>
 
-
-
-      }}>Welcome to Tim's Editor
-<br /></h1>
-
-      <h1 style={{ fontSize: '30px', marginTop: '20px', 
-        marginBottom: '50px', color: darkMode ? '#fcfcf8' :
-         '#014d66'
-      }}>
-Have at it!
-      </h1>
-
-<div
-style={{
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: '20px',
-  marginBottom: '30px',
-  flexWrap: 'wrap',
-}}
->
-
-<button onClick={() => setDarkMode(!darkMode)}
-style={{
-  ...buttonStyle,
-  backgroundColor: darkMode ? '#ae0e8c' : '#ae0e8c',
-  color: 'white',
-
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'block',
- 
-}}
->
-{darkMode ? 'Light Mode' : 'Dark Mode'}
-</button>
-
-<button onClick={() => setShowPreview(!showPreview)}
-style={{
-   ...buttonStyle,
-  backgroundColor: darkMode ? '#ae0e8c' : '#ae0e8c',
-  color: 'white',
-
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'block',
-  
-}}
->
-{showPreview ? 'Hide Preview' : 'Show Preview'}
-</button>
-
-
-<button onClick={() => setFontSize(fontsize + 2)}
-style={{
-   ...buttonStyle,
-  backgroundColor: darkMode ? '#ae0e8c' : '#ae0e8c',
-  color: 'white',
-
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'block',
-  
-}}
->
-A+</button>
-
-<button onClick={() => setFontSize(fontsize - 2)}
-style={{
-...buttonStyle,
-  backgroundColor: darkMode ? '#ae0e8c' : '#ae0e8c',
-  color: 'white',
-
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-  display: 'block',
-  
-}}
->
-A-</button> 
-
-<input
-  type="text"
-  value={fileName}
-  onChange={(e) => setFileName(e.target.value)}
-  placeholder="Put name of your file here"
-  style={{
-    backgroundColor: darkMode ? '#4d0247' : 'white',
-    color: darkMode ? 'white' : 'black',
-    border: '2px solid #014d66',
-    padding: '10px',
-    fontSize: '16px',
-  }}
-/>
-
-</div>
-
-
-      <h2 style={{ marginTop: '0px', 
-      color: darkMode ? '#f25dc8' : '#014d66'
-       }}>Type here ⤵️</h2>
-      
-      <textarea value={text} 
-      onChange={(e) => setText(e.target.value)}
-      style={{
-        width: '100%',
-        maxWidth: '700px',
-        boxSizing: 'border-box',
-        height: window.innerWidth < 768 ? '200px' : '300px',
-        fontSize: `${fontsize}px`,
-        padding: '20px',
-        marginTop: '20px',
-        backgroundColor: darkMode ? '#4d0247' : 'white',
-        color: darkMode ? 'white' : 'black',
-        border: '2px solid  #4d0247',
-      }}
-      
-      ></textarea>
-
-<div
-style={{
-  display: 'flex',
-justifyContent: 'center',
-  alignItems: 'center',
-  gap: '20px',
-  flexWrap: 'wrap',
-}}
->
-
-
-
-<button onClick={copyToClipboard}
-style={{
-   ...buttonStyle,
-  backgroundColor: '#7b0962',
-  color: 'white',
-    fontWeight: 'bold',
-  borderRadius: '20px',
-  border: 'none',
-  cursor: 'pointer',
-  
-}}
->
-Copy Text</button>
-
-<button onClick={saveText}
-style={{
-   ...buttonStyle,
-  backgroundColor: '#7b0962',
-  color: 'white',
-
-  fontWeight: 'bold', 
-  borderRadius: '20px',
-  border: 'none',
-  cursor: 'pointer',
- 
-}}
->Save Text </button>
-
-
-</div>
-
-{showPreview && (
-  <>
-  <p style={{  
-     ...buttonStyle,
-    fontWeight: 'bold',
-  marginTop: '20px',
-  marginBottom: '20px',
-  color: darkMode ? '#f25dc8' : '#014d66',
-   }}>
-    Preview
-    </p>
-
-  <p style={{
-    width: '100%',
-    maxWidth: '700px',
-    boxSizing: 'border-box',
-    fontSize: `${fontsize}px`,
-     backgroundColor: darkMode ? '#4d0247' : 'white',
-     color: darkMode ? 'white' : 'black',
-     border: '2px solid  #4d0247',
-       marginTop: '20px',
-  marginBottom: '20px',
-  marginLeft: 'auto',
-  marginRight: 'auto',
-    textAlign: 'left'
- }}>{text}</p>
- </>
-)}
-
-
-<div style={{ marginTop: '20px', marginBottom: '20px' }}>
-<button onClick={clearText}
-style={{ 
-   ...buttonStyle,
-  backgroundColor: '#ef0e24',
-  color: 'white',
-
-  fontWeight: 'bold', 
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-  marginBottom: '20px',
-  marginTop: '20px',
-}}
->Clear Text</button>
-</div>
-
-
-<div
-
-style={{
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: '20px',
-  marginBottom: '30px',
-  flexWrap: 'wrap',
-}}
-
->
-<button onClick={downloadTextFile}
-style={{
-   ...buttonStyle,
-  backgroundColor: '#7b0962',
-  color: 'white',
-
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-}}
->
-Download Text</button>
-
-<button onClick={downloadPDF}
-style={{
-  ...buttonStyle,
-  backgroundColor: '#7b0962',
-  color: 'white',
- 
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-
-}}
->
-Download PDF</button>
-</div>
-
-
-
-<p>{text.length} characters</p>
-
-<p>{wordCount} words</p>
-
-
-
-<p>Last saved at: {lastSaved}</p>
-
-
-
-<a href='mailto:tim@timhupkes.com' 
-style={{
-color: darkMode ? '#d9bbf9' : '#014d66',
-}}
->
-Contact Tim</a>
-
-<img src={TimPhoto} alt='Tim Hupkes' style={{ 
-  width: '200px', borderRadius: '100px', display:
-   'block', margin: '20px auto' }} />
-</div>
-
-)}
-
+        <EditorStats lastSaved={lastSaved} stats={textStats} />
+        <ProfileFooter imageSrc={TimPhoto} />
+      </section>
+    </main>
+  )
+}
 
 export default App
