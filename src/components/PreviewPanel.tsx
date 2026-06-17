@@ -6,6 +6,7 @@ import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown
 import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup'
 import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript'
 import { oneLight, vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { FORMAT_ACTIONS } from '../utils/markdownToolbarActions'
 
 SyntaxHighlighter.registerLanguage('css', css)
 SyntaxHighlighter.registerLanguage('html', markup)
@@ -27,6 +28,19 @@ export function PreviewPanel({ darkMode, fontSize, text }: PreviewPanelProps) {
     <section className="panel" aria-label="Text preview">
       <div className="panel__header">
         <h2 id="preview-label">Preview</h2>
+      </div>
+      <div className="markdown-toolbar markdown-toolbar--spacer" aria-hidden="true">
+        {FORMAT_ACTIONS.map((action) => (
+          <button
+            key={action.format}
+            type="button"
+            className="markdown-toolbar__button"
+            disabled
+            tabIndex={-1}
+          >
+            {action.label}
+          </button>
+        ))}
       </div>
       <div id="text-preview" className="preview-box markdown-preview" style={{ fontSize }}>
         {text.trim() ? (

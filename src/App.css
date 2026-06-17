@@ -215,6 +215,11 @@
   border-color: var(--primary);
 }
 
+.markdown-toolbar--spacer {
+  pointer-events: none;
+  visibility: hidden;
+}
+
 .editor-textarea,
 .preview-box {
   min-height: 320px;
